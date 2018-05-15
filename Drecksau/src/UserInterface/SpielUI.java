@@ -16,6 +16,9 @@ public class SpielUI {
 		ui.sc.close();
 	}
 
+	/**
+	 * startet ein neues Spiel und legt die Spieler an
+	 */
 	public void neuesSpiel() {
 		System.out
 				.println("Willkommen bei 'Drecksau'. Geben sie ein mit wie vielen Spielern sie spielen wollen (3-5).");
@@ -49,6 +52,9 @@ public class SpielUI {
 		}
 	}
 
+	/**
+	 * fuehrt das Hauptspiel aus
+	 */
 	private void hauptspiel() {
 		for (int a = 0; a < 14; a++) {
 			System.out.println("-----------------------------------------------------------------------------");

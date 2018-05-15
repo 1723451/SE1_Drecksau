@@ -46,8 +46,10 @@ class Spieler {
 	 * 
 	 * @param runde
 	 *            Rundennummer
+	 * @return diff der Punkte
 	 */
-	public void sticheAuswerten(int runde) {
+	public int sticheAuswerten(int runde) {
+		int punkteVorher = getPunkte();
 		if (runde == 7) {
 			punkte += gemachteStiche;
 		} else if (runde == 8) {
@@ -57,6 +59,7 @@ class Spieler {
 		} else {
 			punkte -= Math.abs(this.angesagteStiche - this.gemachteStiche);
 		}
+		return getPunkte() - punkteVorher;
 	}
 
 	/**

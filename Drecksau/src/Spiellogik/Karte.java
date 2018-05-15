@@ -9,10 +9,20 @@ class Karte {
 		this.wert = wert;
 	}
 
+	/**
+	 * gibt den Namen der Karte zurueck
+	 * 
+	 * @return Namen der Karte
+	 */
 	public String getName() {
 		return this.name;
 	}
 
+	/**
+	 * gibt den Wert der Karte zurueck
+	 * 
+	 * @return Wert der Karte
+	 */
 	public int getWert() {
 		return this.wert;
 	}

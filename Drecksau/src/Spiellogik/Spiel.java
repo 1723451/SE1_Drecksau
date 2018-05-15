@@ -13,6 +13,12 @@ public class Spiel implements bedienerInterface {
 	private int anzahlAngesagteStiche;
 	private ArrayList<Karte> gelegteKarten = new ArrayList<>();
 
+	/**
+	 * Konstruktor, legt die Spielkarten an
+	 * 
+	 * @param anzahlSpieler
+	 *            Anzahl der Spieler
+	 */
 	public Spiel(int anzahlSpieler) {
 		if (anzahlSpieler < 3 || anzahlSpieler > 5) {
 			throw new RuntimeException("Spieleranzahl: " + anzahlSpieler + " ungueltig.");
@@ -29,21 +35,46 @@ public class Spiel implements bedienerInterface {
 		}
 	}
 
+	/**
+	 * gibt die Anzahl der Kanten fuer die aktuelle Runde
+	 * 
+	 * @return Anzahl der Kanten
+	 */
 	@Override
 	public int getKartenAnzahlAktuelleRunde() {
 		return this.kartenAnzahl[this.aktuelleRunde - 1];
 	}
 
+	/**
+	 * gibt die Spieleranzahl zurueck
+	 * 
+	 * @return Anzahl der Spieler
+	 */
 	@Override
 	public int getAnzahlSpieler() {
 		return spieler.length;
 	}
 
+	/**
+	 * gibt die Nummer der aktuellen Runde zurueck
+	 * 
+	 * @return Nummer der aktuellen Runde
+	 */
 	@Override
 	public int getAktuelleRunde() {
 		return this.aktuelleRunde;
 	}
 
+	/**
+	 * fuegt einen Spieler hinzu
+	 * 
+	 * @param name
+	 *            Name des Spielers
+	 * @param computerSpieler
+	 *            ist der Spieler ein Computer
+	 * @param schwierigkeitsgrad
+	 *            Schwierigkeitsgrad des Computers
+	 */
 	@Override
 	public void spielerHinzufuegen(String name, boolean computerSpieler, int schwierigkeitsgrad) {
 		for (int a = 0; a < spieler.length; a++) {
@@ -60,6 +91,11 @@ public class Spiel implements bedienerInterface {
 
 	}
 
+	/**
+	 * gibt den Namen des Spielers am Zug zurueck
+	 * 
+	 * @return Name des Spielers
+	 */
 	@Override
 	public String getSpielerAmZug() {
 		if (this.spielerAmZug != null) {
@@ -68,6 +104,11 @@ public class Spiel implements bedienerInterface {
 		return null;
 	}
 
+	/**
+	 * gibt zurueck ob der Spieler am Zug ein Computer ist
+	 * 
+	 * @return ob der Spieler ein Computer ist
+	 */
 	@Override
 	public boolean getSpielerAmZugIstComputer() {
 		if (this.spielerAmZug != null && this.spielerAmZug instanceof ComputerSpieler) {
@@ -76,6 +117,9 @@ public class Spiel implements bedienerInterface {
 		return false;
 	}
 
+	/**
+	 * verteilt die Karten fuer alle Spieler
+	 */
 	private void kartenVerteilen() {
 		ArrayList<Karte> restlicheKarten = new ArrayList<>();
 		for (Karte karte : this.kartenDeck) {
@@ -92,6 +136,12 @@ public class Spiel implements bedienerInterface {
 		}
 	}
 
+	/**
+	 * startet die naechste Runde, lasst dazu die Computer ansagen, bis Spieler am
+	 * Zug ist
+	 * 
+	 * @return String mit Details zur Ansage der Computer
+	 */
 	@Override
 	public String naechteRunde() {
 		this.aktuelleRunde++;
@@ -141,6 +191,14 @@ public class Spiel implements bedienerInterface {
 		return back;
 	}
 
+	/**
+	 * Spieler sagt Stiche an und danach wird bei den restlichen Computern die
+	 * Ansagen gemacht
+	 * 
+	 * @param anzahlStiche
+	 *            Anzahl der Stiche, die der Computer machen moechte
+	 * @return gibt die Angesagten Stiche zurueck
+	 */
 	@Override
 	public String sticheAnsagen(int anzahlStiche) {
 		if (this.aktuelleRunde == 7 || this.aktuelleRunde == 8) {
@@ -245,8 +303,8 @@ public class Spiel implements bedienerInterface {
 			if (!first) {
 				back += "\n";
 			}
-			sp.sticheAuswerten(aktuelleRunde);
-			back += sp.getName() + " hat " + sp.getPunkte() + " Punkte.";
+			int diffPunkte = sp.sticheAuswerten(aktuelleRunde);
+			back += sp.getName() + " hat " + sp.getPunkte() + " Punkte. (" + diffPunkte + ")";
 			first = false;
 		}
 		for (Spieler sp : this.spieler) {
