@@ -2,11 +2,12 @@ package Spiellogik;
 
 import java.util.ArrayList;
 
-public class Spiel implements bedienerInterface {
+public class Spiel implements BedienerInterface {
 
 	private final Karte[] kartenDeck = new Karte[32];
 	private final int[] kartenAnzahl = { 1, 2, 3, 4, 5, 6, 6, 6, 6, 5, 4, 3, 2, 1 };
-	private Spieler[] spieler;
+	private ArrayList<Spieler> spieler = new ArrayList<>();
+	private int spielerAnzahl;
 	private Spieler spielerAmZug;
 	private int aktuelleRunde;
 	private Spieler erstAnsager;
@@ -23,7 +24,7 @@ public class Spiel implements bedienerInterface {
 		if (anzahlSpieler < 3 || anzahlSpieler > 5) {
 			throw new RuntimeException("Spieleranzahl: " + anzahlSpieler + " ungueltig.");
 		}
-		this.spieler = new Spieler[anzahlSpieler];
+		this.spielerAnzahl = anzahlSpieler;
 		String[] symbole = { "Karo", "Herz", "Pik", "Kreuz" };
 		String[] ziffern = { "7", "8", "9", "Bube", "Dame", "Koenig", "10", "Ass" };
 		int counter = 0;
@@ -52,7 +53,7 @@ public class Spiel implements bedienerInterface {
 	 */
 	@Override
 	public int getAnzahlSpieler() {
-		return spieler.length;
+		return spieler.size();
 	}
 
 	/**
@@ -77,18 +78,15 @@ public class Spiel implements bedienerInterface {
 	 */
 	@Override
 	public void spielerHinzufuegen(String name, boolean computerSpieler, int schwierigkeitsgrad) {
-		for (int a = 0; a < spieler.length; a++) {
-			if (spieler[a] == null) {
-				if (computerSpieler) {
-					spieler[a] = new ComputerSpieler(schwierigkeitsgrad);
-					return;
-				}
-				spieler[a] = new Spieler(name);
-				return;
+		if (spieler.size() < this.spielerAnzahl) {
+			if (computerSpieler) {
+				spieler.add(new ComputerSpieler(schwierigkeitsgrad));
+			} else {
+				spieler.add(new MenschlicherSpieler(name));
 			}
+			return;
 		}
 		throw new RuntimeException("Keine neuen Spieler moeglich.");
-
 	}
 
 	/**
@@ -137,16 +135,62 @@ public class Spiel implements bedienerInterface {
 	}
 
 	/**
-	 * startet die naechste Runde, lasst dazu die Computer ansagen, bis Spieler am
-	 * Zug ist
+	 * laesst den Spieler am Zug Stiche ansagen, wenn dieser ein Computer ist und
+	 * erhöht die Anzahl der angesagten Stiche
 	 * 
-	 * @return String mit Details zur Ansage der Computer
+	 * @return Anzahl der angesagten Stiche
+	 * @throws RuntimeException
+	 *             wenn kein Computerspieler am Zug ist
+	 */
+	@Override
+	public int computerSticheAnsagenLassen() {
+		if (this.spielerAmZug != null && this.spielerAmZug instanceof ComputerSpieler) {
+			ComputerSpieler spieler = (ComputerSpieler) this.spielerAmZug;
+			int angesagteStiche = spieler.sticheAnsagen(getGegnerKarten(spieler),
+					this.kartenAnzahl[this.aktuelleRunde - 1] - this.anzahlAngesagteStiche, this.aktuelleRunde, false);
+			this.anzahlAngesagteStiche += angesagteStiche;
+			this.spielerAmZug = getNaechsterSpielerAmZug();
+			return angesagteStiche;
+		}
+		throw new RuntimeException("Kein Computer Spieler am Zug.");
+	}
+
+	/**
+	 * laesst den Spieler am Zug Stichen ansagen, wenn dieser ein menchlischer
+	 * Spieler ist und erhöht automatisch die Anzahl der angesagten Stiche
+	 * 
+	 * @param anzahlStiche
+	 *            Anzahl der angesagten Stiche
+	 * @return die Anzahl der angesaten Stiche
+	 * @throws RuntimeException
+	 *             wenn kein menschlicher Spieler am Zug ist
+	 */
+	@Override
+	public int menschSticheAnsagen(int anzahlStiche) {
+		if (this.spielerAmZug != null && this.spielerAmZug instanceof MenschlicherSpieler) {
+			if (getNaechsterSpielerAmZug().equals(erstAnsager)) {
+				if (this.anzahlAngesagteStiche + anzahlStiche == kartenAnzahl[this.aktuelleRunde - 1]) {
+					throw new RuntimeException("Die Anzahl der angesagten Stiche ist nicht moeglich.");
+				}
+			}
+			this.spielerAmZug.setAngesagteStiche(anzahlStiche);
+			this.anzahlAngesagteStiche += anzahlStiche;
+			this.spielerAmZug = getNaechsterSpielerAmZug();
+			return anzahlStiche;
+		}
+		throw new RuntimeException("Kein menschlicher Spieler am Zug.");
+	}
+
+	/**
+	 * startet die naechste Runde und gibt entweder die Gegnerkarten (Runde 1&14)
+	 * oder die eigenen Karten zurueck
+	 * @return String mit den Karten
 	 */
 	@Override
 	public String naechteRunde() {
 		this.aktuelleRunde++;
 		if (this.aktuelleRunde == 1) {
-			this.spielerAmZug = spieler[(int) (Math.random() * spieler.length)];
+			this.spielerAmZug = spieler.get((int) (Math.random() * spieler.size()));
 			this.erstAnsager = this.spielerAmZug;
 		} else {
 			this.spielerAmZug = erstAnsager;
@@ -156,14 +200,14 @@ public class Spiel implements bedienerInterface {
 		kartenVerteilen();
 		String back = "Runde: " + this.aktuelleRunde;
 		if (this.aktuelleRunde == 1 || this.aktuelleRunde == 14) {
-			back += "\n" + this.spieler[0].getName() + " deine Gegner haben folgende Karten:";
-			for (int a = 1; a < this.spieler.length; a++) {
-				back += "\n" + spieler[a].getName() + ": " + spieler[a].getKarten()[0].getName();
+			back += "\n" + this.spieler.get(0).getName() + " deine Gegner haben folgende Karten:";
+			for (int a = 1; a < this.spieler.size(); a++) {
+				back += "\n" + spieler.get(a).getName() + ": " + spieler.get(a).getKarten()[0].getName();
 			}
 		} else {
-			back += "\n" + spieler[0].getName() + " du hast folgende Karten: ";
+			back += "\n" + spieler.get(0).getName() + " du hast folgende Karten: ";
 			boolean first = true;
-			for (Karte karte : spieler[0].getKarten()) {
+			for (Karte karte : spieler.get(0).getKarten()) {
 				if (!first) {
 					back += ", ";
 				}
@@ -171,67 +215,18 @@ public class Spiel implements bedienerInterface {
 				first = false;
 			}
 		}
-		if (this.aktuelleRunde != 7 && this.aktuelleRunde != 8) {
-			back += "\n---------------------------------------------------------\t";
-			back += "\nAngesagte Stiche:";
-			while (getSpielerAmZugIstComputer()) { // Computer sagen Stiche an, bis Spieler am Zug ist
-				ComputerSpieler spieler = (ComputerSpieler) this.spielerAmZug;
-				int angesagteStiche = spieler.sticheAnsagen(getGegnerKarten(spieler),
-						this.kartenAnzahl[this.aktuelleRunde - 1] - this.anzahlAngesagteStiche, this.aktuelleRunde,
-						false);
-				this.anzahlAngesagteStiche += angesagteStiche;
-				back += "\n" + this.spielerAmZug.getName() + " hat " + angesagteStiche + " Stich(e) angesagt.";
-				this.spielerAmZug = getNaechsterSpielerAmZug();
-			}
-		} else if (this.aktuelleRunde == 7) {
-			back += "\nDie naechste Runde ist eine Sonderrunde. Versuchen sie so viele Stiche wie moeglich zu machen.";
-		} else {
-			back += "\nDie naechste Runde ist eine Sonderrunde. Versuchen sie so wenige Stiche wie moeglich zu machen.";
-		}
 		return back;
 	}
 
 	/**
-	 * Spieler sagt Stiche an und danach wird bei den restlichen Computern die
-	 * Ansagen gemacht
+	 * gibt den naechsten Spieler am Zug zurueck
 	 * 
-	 * @param anzahlStiche
-	 *            Anzahl der Stiche, die der Computer machen moechte
-	 * @return gibt die Angesagten Stiche zurueck
+	 * @return nachster Spieler am Zug
 	 */
-	@Override
-	public String sticheAnsagen(int anzahlStiche) {
-		if (this.aktuelleRunde == 7 || this.aktuelleRunde == 8) {
-			return null; // wenn Sonderrunde
-		}
-		if (!getSpielerAmZugIstComputer()) {
-			if (getNaechsterSpielerAmZug().equals(erstAnsager)) {
-				if (this.anzahlAngesagteStiche + anzahlStiche == kartenAnzahl[this.aktuelleRunde - 1]) {
-					throw new RuntimeException("Die Anzahl der angesagten Stiche ist nicht moeglich.");
-				}
-			}
-			this.spielerAmZug.setAngesagteStiche(anzahlStiche);
-			this.anzahlAngesagteStiche += anzahlStiche;
-			String back = this.spielerAmZug.getName() + " hat " + anzahlStiche + " Stich(e) angesagt.";
-			this.spielerAmZug = getNaechsterSpielerAmZug();
-			while (!this.spielerAmZug.equals(this.erstAnsager)) {
-				ComputerSpieler spieler = (ComputerSpieler) this.spielerAmZug;
-				int angesagteStiche = spieler.sticheAnsagen(getGegnerKarten(spieler),
-						this.kartenAnzahl[this.aktuelleRunde - 1] - this.anzahlAngesagteStiche, this.aktuelleRunde,
-						(getNaechsterSpielerAmZug().equals(this.erstAnsager)) ? true : false);
-				this.anzahlAngesagteStiche += angesagteStiche;
-				back += "\n" + this.spielerAmZug.getName() + " hat " + angesagteStiche + " Stich(e) angesagt.";
-				this.spielerAmZug = getNaechsterSpielerAmZug();
-			}
-			return back;
-		}
-		throw new RuntimeException("Spieler Am Zug ist ein Computer.");
-	}
-
 	private Spieler getNaechsterSpielerAmZug() {
-		for (int a = 0; a < this.spieler.length; a++) {
-			if (spielerAmZug.equals(spieler[a])) {
-				return spieler[(a + 1) % this.spieler.length];
+		for (int a = 0; a < this.spieler.size(); a++) {
+			if (spielerAmZug.equals(spieler.get(a))) {
+				return spieler.get((a + 1) % this.spieler.size());
 			}
 		}
 		throw new RuntimeException("Naechsten Spieler nicht gefunden.");
@@ -247,7 +242,7 @@ public class Spiel implements bedienerInterface {
 	 */
 	private Karte[] getGegnerKarten(Spieler spieler) {
 		if (this.aktuelleRunde == 1 || this.aktuelleRunde == 14) {
-			Karte[] karten = new Karte[this.spieler.length - 1];
+			Karte[] karten = new Karte[this.spieler.size() - 1];
 			int index = 0;
 			for (Spieler sp : this.spieler) {
 				if (!sp.equals(spieler)) {
@@ -321,7 +316,7 @@ public class Spiel implements bedienerInterface {
 	 */
 	@Override
 	public String stichAuswerten() {
-		if (this.gelegteKarten.size() != this.spieler.length) {
+		if (this.gelegteKarten.size() != this.spieler.size()) {
 			throw new RuntimeException("Es haben noch nicht alle Spieler gelegt.");
 		}
 		int index = 0;
@@ -346,7 +341,7 @@ public class Spiel implements bedienerInterface {
 	@Override
 	public String gewinnerAuswerten() {
 		ArrayList<Spieler> gewinner = new ArrayList<>();
-		gewinner.add(this.spieler[0]);
+		gewinner.add(this.spieler.get(0));
 		for (Spieler sp : this.spieler) {
 			if (sp.getPunkte() > gewinner.get(0).getPunkte()) {
 				gewinner.clear();

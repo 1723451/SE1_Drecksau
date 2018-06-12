@@ -2,7 +2,7 @@ package Spiellogik;
 
 import java.util.ArrayList;
 
-class Spieler {
+abstract class Spieler {
 	private String name;
 	private int punkte = 0;
 	private ArrayList<Karte> karten;

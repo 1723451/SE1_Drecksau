@@ -3,11 +3,11 @@ package UserInterface;
 import java.util.Scanner;
 
 import Spiellogik.Spiel;
-import Spiellogik.bedienerInterface;
+import Spiellogik.BedienerInterface;
 
 public class SpielUI {
 	private Scanner sc = new Scanner(System.in);
-	private bedienerInterface spiel;
+	private BedienerInterface spiel;
 
 	public static void main(String[] args) {
 		SpielUI ui = new SpielUI();
@@ -60,18 +60,34 @@ public class SpielUI {
 			System.out.println("-----------------------------------------------------------------------------");
 			System.out.println(this.spiel.naechteRunde());
 			if (this.spiel.getAktuelleRunde() != 7 && this.spiel.getAktuelleRunde() != 8) {
-				System.out.println(
-						spiel.getSpielerAmZug() + " geben sie die Anzahl der Stiche an, die sie machen wollen.");
-				while (true) {
-					try {
-						System.out.println(spiel.sticheAnsagen(Integer.valueOf(sc.nextLine())));
-						break;
-					} catch (NumberFormatException e) {
-						System.out.println("Fehler bei der Eingabe, geben sie die Zahl erneut ein.");
-					} catch (RuntimeException e) {
-						System.out.println(e.getMessage() + " Geben sie die Zahl erneut ein.");
+				System.out.println("---------------------------------------------------------\nAngesagte Stiche:");
+				for (int b = 0; b < this.spiel.getAnzahlSpieler(); b++) {
+					if (this.spiel.getSpielerAmZugIstComputer()) {
+						System.out.println(this.spiel.getSpielerAmZug() + " hat "
+								+ this.spiel.computerSticheAnsagenLassen() + " Stich(e) angesagt.");
+					} else {
+						System.out.println(spiel.getSpielerAmZug()
+								+ " geben sie die Anzahl der Stiche an, die sie machen wollen.");
+						while (true) {
+							try {
+								System.out.println(this.spiel.getSpielerAmZug() + " hat "
+										+ this.spiel.menschSticheAnsagen(Integer.valueOf(sc.nextLine()))
+										+ " Stich(e) angesagt.");
+								break;
+							} catch (NumberFormatException e) {
+								System.out.println("Fehler bei der Eingabe, geben sie die Zahl erneut ein.");
+							} catch (RuntimeException e) {
+								System.out.println(e.getMessage() + " Geben sie die Zahl erneut ein.");
+							}
+						}
 					}
 				}
+			} else if (this.spiel.getAktuelleRunde() == 7) {
+				System.out.println(
+						"Die naechste Runde ist eine Sonderrunde. Versuchen sie so viele Stiche wie moeglich zu machen.");
+			} else {
+				System.out.println(
+						"Die naechste Runde ist eine Sonderrunde. Versuchen sie so wenige Stiche wie moeglich zu machen.");
 			}
 			for (int c = 0; c < this.spiel.getKartenAnzahlAktuelleRunde(); c++) {
 				System.out.println("---------------------------------------------------------\t");

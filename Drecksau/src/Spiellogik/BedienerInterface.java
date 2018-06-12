@@ -1,6 +1,6 @@
 package Spiellogik;
 
-public interface bedienerInterface {
+public interface BedienerInterface {
 	void spielerHinzufuegen(String name, boolean computerSpieler, int schwierigkeitsgrad);
 
 	String getSpielerAmZug();
@@ -8,8 +8,6 @@ public interface bedienerInterface {
 	int getAnzahlSpieler();
 
 	String naechteRunde();
-
-	String sticheAnsagen(int anzahlStiche);
 
 	boolean getSpielerAmZugIstComputer();
 
@@ -24,4 +22,8 @@ public interface bedienerInterface {
 	String karteLegen(String karte);
 
 	int getAktuelleRunde();
+
+	int computerSticheAnsagenLassen();
+
+	int menschSticheAnsagen(int anzahlStiche);
 }
